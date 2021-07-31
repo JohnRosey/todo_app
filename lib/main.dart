@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
 
         theme: ThemeData(
-        textTheme:  GoogleFonts.indieFlowerTextTheme(
+        textTheme:  GoogleFonts.quicksandTextTheme(
           Theme.of(context).textTheme,
         )
       ),

@@ -44,16 +44,30 @@ class _HomepageState extends State<Homepage> {
                   ),
                   Expanded(
                       child: FutureBuilder(
+                        initialData: [],
                         future: _dbHelper.getTasks(),
                         builder: (context,snapshot){
-                          return ListView.builder(
-                            itemCount:snapshot.data.length,
-                            itemBuilder: (context,index){
-                              return TaskCardWidget(
-                                title: snapshot.data[index].title,
-                              );
+                          return ScrollConfiguration(
+                            behavior: NoGlowBehaviour(),
+                            child: ListView.builder(
+                              itemCount:snapshot.data.length,
+                              itemBuilder: (context,index){
+                                return GestureDetector(
+                                  onTap: (){
 
-                          },);
+                                    Navigator.push(context,
+                                      MaterialPageRoute(
+                                          builder: (context)=>Taskpage(tache:snapshot.data[index],
+                                          )),
+                                    );
+                                  },
+                                  child: TaskCardWidget(
+                                    title: snapshot.data[index].title,
+                                  ),
+                                );
+
+                            },),
+                          );
                         },
                       ),
                     ),
@@ -68,9 +82,13 @@ class _HomepageState extends State<Homepage> {
                   onTap:(){
                   Navigator.push(context,
                       MaterialPageRoute(
-                          builder: (context)=>Taskpage()
-                      ),
-                  );
+                          builder: (context)=>Taskpage(tache:null,)),
+                  ).then((value) {
+                    setState(() {
+
+                    });
+                  });
+
                 },
                 child: Container(
                   width: 60.0,

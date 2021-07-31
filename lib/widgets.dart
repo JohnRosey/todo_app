@@ -85,12 +85,14 @@ TodoWidget({@required this.estFait, this.text});
               image: AssetImage('images/assets/check.jpeg'),
             ),
           ),
-          Text(
-             text ?? "(TOTO)",
-            style: TextStyle(
-              color: estFait ?Colors.green:Colors.grey,
-              fontSize: 25.0,
-              fontWeight: estFait? FontWeight.bold:FontWeight.w500,
+          Flexible(
+            child: Text(
+               text ?? "(TOTO)",
+              style: TextStyle(
+                color: estFait ?Colors.green:Colors.grey,
+                fontSize: 25.0,
+                fontWeight: estFait? FontWeight.bold:FontWeight.w500,
+              ),
             ),
           )
         ],

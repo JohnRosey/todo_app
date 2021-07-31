@@ -1,14 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:todo_justdoit/base.dart';
 import 'package:todo_justdoit/model/tache.dart';
-import 'package:todo_justdoit/widgets.dart';
+import 'package:todo_justdoit/model/todo.dart';
+
+
+import '../base.dart';
+import '../widgets.dart';
 
 class Taskpage extends StatefulWidget {
+  final Tache tache;
+
+  Taskpage({@required this.tache});
+
   @override
   _TaskpageState createState() => _TaskpageState();
 }
 
 class _TaskpageState extends State<Taskpage> {
+  DatabaseHelper _dbHelper = DatabaseHelper();
+
+  int _taskId = 0;
+  String _taskTitle = "";
+  String _taskDescription = "";
+
+  FocusNode _titleFocus;
+  FocusNode _descriptionFocus;
+  FocusNode _todoFocus;
+
+  bool _contentVisile = false;
+
+  @override
+  void initState() {
+    if (widget.tache != null) {
+      // Set visibility to true
+      _contentVisile = true;
+
+      _taskTitle = widget.tache.title;
+      _taskDescription = widget.tache.description;
+      _taskId = widget.tache.id;
+    }
+
+    _titleFocus = FocusNode();
+    _descriptionFocus = FocusNode();
+    _todoFocus = FocusNode();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _titleFocus.dispose();
+    _descriptionFocus.dispose();
+    _todoFocus.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,7 +66,7 @@ class _TaskpageState extends State<Taskpage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(
+                    padding: EdgeInsets.only(
                       top: 24.0,
                       bottom: 6.0,
                     ),
@@ -33,98 +79,188 @@ class _TaskpageState extends State<Taskpage> {
                           child: Padding(
                             padding: const EdgeInsets.all(24.0),
                             child: Image(
-                              image: AssetImage('images/assets/back.jpeg'),
+                              image: AssetImage(
+                                  'images/assets/back.jpeg'),
                             ),
                           ),
                         ),
                         Expanded(
-                            child: TextField(
-                          onSubmitted: (value) async {
-                            if (value != "") {
-                              DatabaseHelper _dbHelper = DatabaseHelper();
-                              Tache _newTache =
-                                  Tache(title: value);
-                              await _dbHelper.insertTask(_newTache);
-                            }
-                            print("Tache creer ");
-                          },
-                          decoration: InputDecoration(
-                            hintText: "Entrez votre texte",
-                            border: InputBorder.none,
+                          child: TextField(
+                            focusNode: _titleFocus,
+                            onSubmitted: (value) async {
+                              // Check if the field is not empty
+                              if (value != "") {
+                                // Check if the task is null
+                                if (widget.tache == null) {
+                                  Tache _newTask = Tache(title: value);
+                                  _taskId = await _dbHelper.insertTask(_newTask);
+                                  setState(() {
+                                    _contentVisile = true;
+                                    _taskTitle = value;
+                                  });
+                                } else {
+                                  await _dbHelper.updateTaskTitle(_taskId, value);
+                                  print("Task Updated");
+                                }
+                                _descriptionFocus.requestFocus();
+                              }
+                            },
+                            controller: TextEditingController()
+                              ..text = _taskTitle,
+                            decoration: InputDecoration(
+                              hintText: "Enter Task Title",
+                              border: InputBorder.none,
+                            ),
+                            style: TextStyle(
+                              fontSize: 26.0,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF211551),
+                            ),
                           ),
-                          style: TextStyle(
-                            fontSize: 26.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.lightBlue,
-                          ),
-                        ))
+                        )
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: 12.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 12.0,
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                          hintText: "Ecrit ici!",
+                  Visibility(
+                    visible: _contentVisile,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: 12.0,
+                      ),
+                      child: TextField(
+                        focusNode: _descriptionFocus,
+                        onSubmitted: (value) async {
+                          if(value != ""){
+                            if(_taskId != 0){
+                              await _dbHelper.updateTaskDescription(_taskId, value);
+                              _taskDescription = value;
+                            }
+                          }
+                          _todoFocus.requestFocus();
+                        },
+                        controller: TextEditingController()..text = _taskDescription,
+                        decoration: InputDecoration(
+                          hintText: "Enter Description for the task...",
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: 24.0,
-                          )),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  TodoWidget(
-                    estFait: false,
-                    text: 'sssss',
+                  Visibility(
+                    visible: _contentVisile,
+                    child: FutureBuilder(
+                      initialData: [],
+                      future: _dbHelper.getTodo(_taskId),
+                      builder: (context, snapshot) {
+                        return Expanded(
+                          child: ListView.builder(
+                            itemCount: snapshot.data.length,
+                            itemBuilder: (context, index) {
+                              return GestureDetector(
+                                onTap: () async {
+                                  if(snapshot.data[index].estFait == 0){
+                                    await _dbHelper.updateTodoDone(snapshot.data[index].id, 1);
+                                  } else {
+                                    await _dbHelper.updateTodoDone(snapshot.data[index].id, 0);
+                                  }
+                                  setState(() {});
+                                },
+                                child: TodoWidget(
+                                  text: snapshot.data[index].title,
+                                  estFait: snapshot.data[index].estFait == 0
+                                      ? false
+                                      : true,
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  TodoWidget(
-                    estFait: false,
-                    text: 'sssssss',
-                  ),
-                  TodoWidget(
-                    text: 'ssss',
-                    estFait: true,
-                  ),
-                  TodoWidget(
-                    text: 'ddddd',
-                    estFait: true,
-                  ),
+                  Visibility(
+                    visible: _contentVisile,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20.0,
+                            height: 20.0,
+                            margin: EdgeInsets.only(
+                              right: 12.0,
+                            ),
+                            decoration: BoxDecoration(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(6.0),
+                                border: Border.all(
+                                    color: Color(0xFF86829D), width: 1.5)),
+                            child: Image(
+                              image: AssetImage('images/assets/check.jpeg'),
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              focusNode: _todoFocus,
+                              controller: TextEditingController()..text = "",
+                              onSubmitted: (value) async {
+                                // Check if the field is not empty
+                                if (value != "") {
+                                  if (_taskId != 0) {
+                                    DatabaseHelper _dbHelper = DatabaseHelper();
+                                    Todo _newTodo = Todo(
+                                      title: value,
+                                      estFait: 0,
+                                      taskId: _taskId,
+                                    );
+                                    await _dbHelper.insertTodo(_newTodo);
+                                    setState(() {});
+                                    _todoFocus.requestFocus();
+                                  } else {
+                                    print("Task doesn't exist");
+                                  }
+                                }
+                              },
+                              decoration: InputDecoration(
+                                hintText: "Enter Todo item...",
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                 ],
               ),
-              Positioned(
-                bottom: 24.0,
-                right: 24.0,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Taskpage()),
-                    );
-                  },
-                  child: Container(
-                    width: 60.0,
-                    height: 60.0,
-                    decoration: new BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(20.0),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.grey,
-                            spreadRadius: 3,
-                            blurRadius: 15,
-                            offset: Offset(0, 5) // Move to bottom 10 Vertically
-                            ),
-                      ],
-                    ),
-                    child: Image(
-                      image: AssetImage(
-                        "images/assets/delete.jpeg",
+              Visibility(
+                visible: _contentVisile,
+                child: Positioned(
+                  bottom: 24.0,
+                  right: 24.0,
+                  child: GestureDetector(
+                    onTap: () async {
+                      if(_taskId != 0) {
+                        await _dbHelper.deleteTask(_taskId);
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Container(
+                      width: 60.0,
+                      height: 60.0,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFE3577),
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      child: Image(
+                        image: AssetImage(
+                          "images/assets/delete.jpeg",
+                        ),
                       ),
                     ),
                   ),
