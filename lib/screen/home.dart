@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite/sqlite_api.dart';
 import 'package:todo_justdoit/screen/taches.dart';
 import 'package:todo_justdoit/screen/widget.dart';
+
+import '../base.dart';
 
 
 class Homepage extends StatefulWidget {
@@ -9,6 +13,7 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
+  DatabaseHelper _dbHelper = DatabaseHelper();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,22 +43,21 @@ class _HomepageState extends State<Homepage> {
                     ),
                   ),
                   Expanded(
-                    child: ScrollConfiguration(
-                      behavior: NoGlowBehaviour(),
-                      child: ListView(
-                        children: [
-                          TaskCardWidget(
-                            title: "Get Started!",
-                            desc: "Hello User!",
-                          ),
-                          TaskCardWidget(desc: 'Text', title: 'Text',),
-                          TaskCardWidget(desc: 'Text', title: 'Text',),
-                          TaskCardWidget(desc: 'Text', title: 'Text',),
-                          TaskCardWidget(desc: 'Text', title: 'Text',),
-                        ],
+                      child: FutureBuilder(
+                        future: _dbHelper.getTasks(),
+                        builder: (context,snapshot){
+                          return ListView.builder(
+                            itemCount:snapshot.data.length,
+                            itemBuilder: (context,index){
+                              return TaskCardWidget(
+                                title: snapshot.data[index].title,
+                              );
+
+                          },);
+                        },
                       ),
                     ),
-                  )
+
                 ],
               ),
 

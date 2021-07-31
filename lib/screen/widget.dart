@@ -4,7 +4,7 @@ class TaskCardWidget extends StatelessWidget {
   final String title;
   final String desc;
 
-  TaskCardWidget({required this.title, required this.desc});
+  TaskCardWidget({ this.title,  this.desc});
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class TodoWidget extends StatelessWidget {
   final String text;
   final bool isDone;
 
-  TodoWidget({required this.text, required this.isDone});
+  TodoWidget({ this.text, @required this.isDone});
 
   @override
   Widget build(BuildContext context) {
