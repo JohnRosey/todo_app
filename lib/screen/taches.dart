@@ -245,7 +245,7 @@ class _TaskpageState extends State<Taskpage> {
                   right: 24.0,
                   child: GestureDetector(
                     onTap: () async {
-                      if(_taskId != 0) {
+                      if(_taskId != null) {
                         await _dbHelper.deleteTask(_taskId);
                         Navigator.pop(context);
                       }

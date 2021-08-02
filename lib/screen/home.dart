@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:sqflite/sqlite_api.dart';
 import 'package:todo_justdoit/screen/taches.dart';
 import 'package:todo_justdoit/screen/widget.dart';
 
@@ -52,6 +50,7 @@ class _HomepageState extends State<Homepage> {
                             child: ListView.builder(
                               itemCount:snapshot.data.length,
                               itemBuilder: (context,index){
+
                                 return GestureDetector(
                                   onTap: (){
                                     Navigator.push(context,
@@ -62,10 +61,12 @@ class _HomepageState extends State<Homepage> {
                                           )),
                                     );
                                   },
+
                                   child: TaskCardWidget(
                                     title: snapshot.data[index].title,
                                    desc: snapshot.data[index].description,
                                   ),
+
                                 );
 
                             },),
